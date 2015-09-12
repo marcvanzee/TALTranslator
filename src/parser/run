@@ -1,0 +1,2 @@
+java -jar jtb132.jar -o FOLParser.jj -p parser FOLParser_pre.jj
+./javacc.bat FOLParser.jj

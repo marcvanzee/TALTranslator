@@ -1,0 +1,2 @@
+-injars       TALtoProlog.jar
+-outjars      TALtoProlog_out.jar

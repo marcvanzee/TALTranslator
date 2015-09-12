@@ -1,0 +1,163 @@
+/*
+ * A grammar file for First-Order Logic, intended to be used in combination with
+ * Java Tree Builder (http://compilers.cs.ucla.edu/jtb/)
+ * Execute the file "run" that can be found in the same directory as this file to
+ * build the JTB syntax tree. This will build a parse tree, where each non-terminal 
+ * is represented as a class
+ *
+ * The resulting parser will parse any first-order theory, where formulas are ended by a ";"
+ *
+ *
+ * === SYNTAX ============
+ * _________________________________________
+ * | symbol	|	meaning		| precedence	|
+ * |--------|---------------|---------------|
+ * | not	| negation		| 1				|
+ * | exists	| quantification| 2				|
+ * | forall	|      ,,       | 2				|
+ * | and	| and			| 3				|
+ * | or		| or			| 4				|
+ * | ->		| implication	| 5				|
+ * | <->	| equivalence	| 6				|
+ * |________|_______________|_______________|
+ *
+ * () may be used to group expressions to change the order of evaluation.
+ * [] may be used to annotate parts of the formula. this is for TAL translation and can be
+ *    ignored if it is not used.
+ *
+ *
+ * === REMARKS ============
+ *
+ * - Connectives are right recursive when no parentheses are used, meaning that 
+ *   p(0) -> q(1) -> r(2) is equivalent (p(0) -> (q(1) -> r(2))
+ * - Constants are interpreted as nullary predicates (with zero arguments).
+ * - Quantifiers require a colon between the variable and the formula.
+ *
+ *
+ * === EXAMPLES ============
+ *
+ * forall X : exists Y : p(X,Y)
+ * forall X : p(X)
+ * exists X : p(X) -> (q(1) <-> r(1))
+ * color(box,red) and (happy(john) or sad(lucy))
+ *
+ *
+ * @author Marc van Zee (marcvanzee@gmail.com / www.marcvanzee.nl), Linköping University
+ *
+ */
+
+PARSER_BEGIN(TALParser) 
+	package parser;
+	public class TALParser {} 
+PARSER_END(TALParser)
+
+
+/////////////////////
+//   the lexicon   //
+/////////////////////
+
+SKIP : { " " | "\r" | "\t" | "\n" }
+
+TOKEN : /* lexical tokens */
+{   <LPAR : "(">  | <RPAR : ")"> | <COMMA : ","> | <SEMICOLON : ";"> | <COLON : ":"> | <LBRACK : "["> | <RBRACK : "]"> }
+
+
+TOKEN : /* logical connectives */
+{
+	< OR: "or" >  |	
+
+	< AND: "and" >     |	
+
+	< NOT: "not" > |	
+	
+	< EXISTS: "exists" >  |	< FORALL: "forall" > |
+
+	< IMPLIC: "->" > |	< EQUIV: "<->">
+
+}
+
+TOKEN : /* identifiers */
+{
+	<IDENT: ["a"-"z"] ( ["a"-"z"] | ["A"-"Z"] | ["0"-"9"] )* > |
+	
+	<VAR: ["A"-"Z"] ( ["a"-"z"] | ["A"-"Z"] | ["0"-"9"] )* >  |
+	
+	<NUM: ( ["0"-"9"] )+ >
+
+}
+
+
+////////////////////
+//   the parser   //
+////////////////////
+
+// separate one_line and fof because we call fof again in atom but we 
+// do not want to re-use the EOF token.
+
+void one_line() : {} 
+{ 	
+	fof() <EOF>
+}
+
+void fof() : {}
+{
+	implication()  (	<EQUIV> implication() 	)*
+}
+
+void implication() : {} 
+{ 	
+	disjunction()  (	<IMPLIC>  disjunction() 	)*
+}
+
+void disjunction() : {} { 	conjunction() 	(	<OR> conjunction() )* }
+
+void conjunction() : {} {	unary()			( <AND> unary()		)* 	}
+
+void unary() : {}    {  literal()   |   quantification()   }
+
+void quantification() :   {}     {     ( <EXISTS>|  <FORALL> ) <VAR> <COLON> unary()   }
+
+void literal() : {}    {   	atom()  |  negation()     }
+
+void negation() : {}    {  <NOT> unary()   }
+
+
+void atom() :  {}
+{
+    terminal() | 
+    <LPAR> fof() <RPAR> |
+    <LBRACK> fof() <RBRACK>
+}
+
+
+void terminal() :  {}
+{	
+    <VAR>  |
+    predicate()
+    
+}
+
+void predicate() : {}
+{
+	<IDENT> [ argblock() ]
+}
+
+void argblock() : {}
+{
+	<LPAR> [ args() ] <RPAR>
+}
+
+void args() : {}
+{
+	arg() 	(	<COMMA> arg()	)* 
+}
+
+void arg() : {}
+{
+	LOOKAHEAD(<IDENT><LPAR>)
+	
+	predicate() |
+	<IDENT> 	|
+	<VAR>  		|
+	<NUM>
+}

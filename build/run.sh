@@ -1,0 +1,1 @@
+java -XstartOnFirstThread -jar TALtoProlog.jar

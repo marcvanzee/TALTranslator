@@ -1,0 +1,19 @@
+<PROJECT>
+Project 0
+</PROJECT>
+<GENERAL_CONSTR>
+0=true
+1=true
+2=true
+4=true
+8=true
+</GENERAL_CONSTR>
+<ALPHABET>
+fluents{fluent1;fluent2;fluent3;}
+</ALPHABET>
+<OBSERVATIONS>
+flunt1(0);
+</OBSERVATIONS>
+<ACTION_OCC>
+occurs(1,1,a);
+</ACTION_OCC>

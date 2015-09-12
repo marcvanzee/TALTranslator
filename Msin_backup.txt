@@ -1,0 +1,1167 @@
+package gui;
+
+import io.FileIO;
+
+public class Main 
+{
+	protected Shell shlTalToProlog;
+	private Text fluent;
+	private Text action;
+	private Text constant;
+	private Text obsInput;
+	
+	private List fluentsList, actionsList, constantsList, obsList, occList, specList, domList;
+	
+	private Label iconCompileNarrative, iconConvertToProlog, iconReset, iconHelp, iconAbout;
+	
+	private TabFolder mainTab, occSubTab, specSubTab;
+	
+	private Display display;
+	
+	MenuItem menuConstraints, menuSaveAs;
+	
+	private NarrativeManager narrative = new NarrativeManager();
+	private Text log;
+	private Text occInput;
+	private Text occAction;
+	private Text occBeginTime;
+	private Text occEndTime;
+	private Text specInput;
+	private Text specAction;
+	private Text specCurFormula;
+	private Text specPre;
+	private Text specPost;
+	private Text domInput;
+	
+	// indices of the tabs for references later
+	final static int TAB_ALPHABET 		= 0;
+	final static int TAB_OBSERVATIONS 	= 1;
+	final static int TAB_ACTION_OCC 	= 2;
+	final static int TAB_ACTION_SPEC 	= 3;
+	final static int TAB_DOMAIN_CONST 	= 4;
+	final static int TAB_PERSISTENCE 	= 5;
+	final static int TAB_DEPENDENCY		= 6;
+	
+	ConstraintsManager constraints;
+	
+	/**
+	 * Launch the application - for testing
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		try {
+			new Main();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Constructor - opens the window.
+	 */
+	public Main() {
+		display = Display.getDefault();
+		createContents();
+		
+		shlTalToProlog.addListener(SWT.Close, new Listener() { 
+			public void handleEvent(Event event) { 
+				event.doit = exitWindow() == SWT.YES; 
+			}
+		});
+		 
+		shlTalToProlog.open();
+		shlTalToProlog.layout();
+		
+		IO.setGuiOut(log);
+		
+		constraints = narrative.getConstraintsManager();
+		
+		updateConstraints();
+		
+		while (!shlTalToProlog.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+		
+		
+	}
+
+	/**
+	 * Create contents of the window.
+	 */
+	protected void createContents() {
+		shlTalToProlog = new Shell();
+		shlTalToProlog.setText("TALtoProlog BETA v0.1");
+		shlTalToProlog.setSize(837, 728);
+		shlTalToProlog.setLayout(new FormLayout());
+				
+		shlTalToProlog.setLocation(Positioning.getCenter(display, shlTalToProlog.getSize()));
+		
+		mainTab = new TabFolder(shlTalToProlog, SWT.NONE);
+		FormData fd_tabFolder = new FormData();
+		fd_tabFolder.left = new FormAttachment(0, 24);
+		fd_tabFolder.right = new FormAttachment(100, -25);
+		mainTab.setLayoutData(fd_tabFolder);
+		
+		TabItem tablAlphabet = new TabItem(mainTab, SWT.NONE);
+		tablAlphabet.setText("Alphabet");
+		
+		Composite composite_1 = new Composite(mainTab, SWT.NONE);
+		tablAlphabet.setControl(composite_1);
+		
+		Label lblEnterAllThe = new Label(composite_1, SWT.CENTER);
+		lblEnterAllThe.setText("Enter all the fluents, actions and constants that are involved in this narrative. The (number of) arguments do not have to be provided. For example, if an action called action1 requires 2 arguments, it can simply be added as \"action1\".");
+		lblEnterAllThe.setBounds(92, 10, 569, 45);
+		
+		Label label_1 = new Label(composite_1, SWT.SEPARATOR | SWT.HORIZONTAL);
+		label_1.setBounds(143, 67, 469, 2);
+		
+		fluentsList = new List(composite_1, SWT.BORDER);
+		fluentsList.setItems(new String[] {});
+		fluentsList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		fluentsList.setBounds(92, 146, 163, 163);
+		
+		fluent = new Text(composite_1, SWT.BORDER);
+		fluent.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		fluent.setBounds(92, 115, 115, 21);
+		
+		Button btnAddFluent = new Button(composite_1, SWT.NONE);
+		btnAddFluent.setText("Add");
+		btnAddFluent.setBounds(213, 115, 42, 25);
+		
+		action = new Text(composite_1, SWT.BORDER);
+		action.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		action.setBounds(296, 115, 115, 21);
+		
+		actionsList = new List(composite_1, SWT.BORDER);
+		actionsList.setItems(new String[] {});
+		actionsList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		actionsList.setBounds(296, 146, 163, 163);
+		
+		Button btnAddAction = new Button(composite_1, SWT.NONE);
+		btnAddAction.setText("Add");
+		btnAddAction.setBounds(417, 115, 42, 25);
+		
+		Label label_2 = new Label(composite_1, SWT.NONE);
+		label_2.setText("Fluents");
+		label_2.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		label_2.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		label_2.setBounds(92, 87, 55, 15);
+		
+		Label label_3 = new Label(composite_1, SWT.NONE);
+		label_3.setText("Actions");
+		label_3.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		label_3.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		label_3.setBounds(296, 87, 55, 15);
+		
+		Label label_4 = new Label(composite_1, SWT.NONE);
+		label_4.setText("Constants");
+		label_4.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
+		label_4.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		label_4.setBounds(498, 87, 55, 15);
+		
+		constant = new Text(composite_1, SWT.BORDER);
+		constant.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		constant.setBounds(498, 115, 115, 21);
+		
+		Button btnAddConstant = new Button(composite_1, SWT.NONE);
+		btnAddConstant.setText("Add");
+		btnAddConstant.setBounds(619, 115, 42, 25);
+		
+		constantsList = new List(composite_1, SWT.BORDER);
+		constantsList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		constantsList.setBounds(498, 146, 163, 163);
+		
+		Button btnDeleteFluent = new Button(composite_1, SWT.NONE);
+		btnDeleteFluent.setText("Delete");
+		btnDeleteFluent.setBounds(194, 316, 61, 25);
+		
+		Button btnDeleteAction = new Button(composite_1, SWT.NONE);
+		btnDeleteAction.setText("Delete");
+		btnDeleteAction.setBounds(398, 316, 61, 25);
+		
+		Button btnDeleteConstant = new Button(composite_1, SWT.NONE);
+		btnDeleteConstant.setText("Delete");
+		btnDeleteConstant.setBounds(600, 316, 61, 25);
+				
+		TabItem tabObs = new TabItem(mainTab, SWT.NONE);
+		tabObs.setText("Observations");
+		
+		
+		Composite composite_2 = new Composite(mainTab, SWT.NONE);
+		tabObs.setControl(composite_2);
+		
+		Label lblEnterObservationsSeperated = new Label(composite_2, SWT.CENTER);
+		lblEnterObservationsSeperated.setText("Enter observations, seperated by a semi-colon.\r\n");
+		lblEnterObservationsSeperated.setBounds(10, 21, 648, 25);
+		
+		obsInput = new Text(composite_2, SWT.BORDER | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+		obsInput.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		obsInput.setBounds(10, 64, 327, 305);
+		
+		Button btnAddObs = new Button(composite_2, SWT.NONE);
+		btnAddObs.setText("Add");
+		btnAddObs.setBounds(244, 377, 91, 25);
+		
+		obsList = new List(composite_2, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
+		obsList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		obsList.setBounds(353, 64, 392, 305);
+		
+		Button btnEditObs = new Button(composite_2, SWT.NONE);
+		btnEditObs.setText("Edit");
+		btnEditObs.setBounds(654, 377, 91, 25);
+		
+		Button btnDeleteObs = new Button(composite_2, SWT.NONE);
+		btnDeleteObs.setText("Delete");
+		btnDeleteObs.setBounds(557, 377, 91, 25);
+				
+		TabItem tabOcc = new TabItem(mainTab, SWT.NONE);
+		tabOcc.setText("Actions Occurrences");
+		
+		Composite composite_3 = new Composite(mainTab, SWT.NONE);
+		tabOcc.setControl(composite_3);
+		
+		occSubTab = new TabFolder(composite_3, SWT.NONE);
+		occSubTab.setBounds(10, 66, 325, 305);
+		
+		TabItem tbtmManually = new TabItem(occSubTab, SWT.NONE);
+		tbtmManually.setText("Manually");
+		
+		Composite composite_7 = new Composite(occSubTab, SWT.NONE);
+		tbtmManually.setControl(composite_7);
+		
+		occInput = new Text(composite_7, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+		occInput.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		occInput.setBounds(10, 62, 297, 205);
+		
+		Label lblTypeTheAction = new Label(composite_7, SWT.WRAP);
+		lblTypeTheAction.setBounds(10, 10, 259, 46);
+		lblTypeTheAction.setText("Type the action occurrence formulas, separated by a semi-colon: \";\"");
+		
+		TabItem tbtmAutomatic = new TabItem(occSubTab, SWT.NONE);
+		tbtmAutomatic.setText("Automatic");
+		
+		Composite composite_8 = new Composite(occSubTab, SWT.NONE);
+		tbtmAutomatic.setControl(composite_8);
+		
+		occAction = new Text(composite_8, SWT.BORDER);
+		occAction.setBounds(10, 85, 297, 21);
+		
+		Label lblNewLabel = new Label(composite_8, SWT.NONE);
+		lblNewLabel.setBounds(10, 64, 259, 15);
+		lblNewLabel.setText("Action (with arguments)");
+		
+		Label lblNewLabel_1 = new Label(composite_8, SWT.NONE);
+		lblNewLabel_1.setBounds(10, 123, 62, 15);
+		lblNewLabel_1.setText("Start point");
+		
+		occBeginTime = new Text(composite_8, SWT.BORDER);
+		occBeginTime.setBounds(78, 120, 76, 21);
+		
+		Label lblEndPoint = new Label(composite_8, SWT.NONE);
+		lblEndPoint.setText("End point");
+		lblEndPoint.setBounds(10, 159, 62, 15);
+		
+		occEndTime = new Text(composite_8, SWT.BORDER);
+		occEndTime.setBounds(78, 156, 76, 21);
+		
+		Label lblEnterThegrounded = new Label(composite_8, SWT.WRAP);
+		lblEnterThegrounded.setBounds(10, 10, 249, 42);
+		lblEnterThegrounded.setText("Enter the (grounded) action and what the start and end times are of the action/");
+		
+		occList = new List(composite_3, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
+		occList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		occList.setBounds(352, 66, 393, 305);
+		
+		Button btnAddOcc = new Button(composite_3, SWT.NONE);
+		btnAddOcc.setText("Add");
+		btnAddOcc.setBounds(244, 377, 91, 25);
+		
+		Button btnDeleteOcc = new Button(composite_3, SWT.NONE);
+		btnDeleteOcc.setText("Delete");
+		btnDeleteOcc.setBounds(557, 377, 91, 25);
+		
+		Button btnEditOcc = new Button(composite_3, SWT.NONE);
+		btnEditOcc.setText("Edit");
+		btnEditOcc.setBounds(654, 377, 91, 25);
+		
+		Label lblActionOccurrencesCan = new Label(composite_3, SWT.CENTER);
+		lblActionOccurrencesCan.setText("Action Occurrences can be entered manually or automatically. In manual mode the complete action occurrence formulas have to be entered, seperated by a semi-colon \";\". In automatic mode, only the actions and time points have to be entered.");
+		lblActionOccurrencesCan.setBounds(10, 10, 735, 50);
+		
+		TabItem tabSpec = new TabItem(mainTab, SWT.NONE);
+		tabSpec.setText("Action Specifications");
+		
+		Composite composite = new Composite(mainTab, SWT.NONE);
+		tabSpec.setControl(composite);
+		
+		Label label_5 = new Label(composite, SWT.CENTER);
+		label_5.setText("Action Occurrences can be entered manually or automatically. In manual mode the complete action occurrence formulas have to be entered, seperated by a semi-colon \";\". In automatic mode, only the actions and time points have to be entered.");
+		label_5.setBounds(10, 10, 735, 50);
+		
+		specSubTab = new TabFolder(composite, SWT.NONE);
+		specSubTab.setBounds(10, 66, 325, 305);
+		
+		TabItem tbtmManual = new TabItem(specSubTab, SWT.NONE);
+		tbtmManual.setText("Manually");
+		
+		Composite composite_9 = new Composite(specSubTab, SWT.NONE);
+		tbtmManual.setControl(composite_9);
+		
+		Label label_6 = new Label(composite_9, SWT.WRAP);
+		label_6.setText("Type the action occurrence formulas, separated by a semi-colon: \";\"");
+		label_6.setBounds(10, 10, 259, 46);
+		
+		specInput = new Text(composite_9, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+		specInput.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specInput.setBounds(10, 62, 297, 205);
+		
+		TabItem tbtmAutomatic_1 = new TabItem(specSubTab, SWT.NONE);
+		tbtmAutomatic_1.setText("Automatic");
+		
+		Composite composite_10 = new Composite(specSubTab, SWT.NONE);
+		tbtmAutomatic_1.setControl(composite_10);
+		
+		Label lblActionOccurrenceFormula = new Label(composite_10, SWT.NONE);
+		lblActionOccurrenceFormula.setBounds(10, 10, 252, 15);
+		lblActionOccurrenceFormula.setText("Action (with arguments)");
+		
+		specAction = new Text(composite_10, SWT.BORDER);
+		specAction.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specAction.setBounds(10, 31, 252, 21);
+		
+		Label lblCurrentFormula = new Label(composite_10, SWT.NONE);
+		lblCurrentFormula.setBounds(10, 162, 252, 15);
+		lblCurrentFormula.setText("Current Formula");
+		
+		specCurFormula = new Text(composite_10, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		specCurFormula.setEditable(false);
+		specCurFormula.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specCurFormula.setBounds(10, 183, 297, 84);
+		
+		Label lblSpecificationPostcondition = new Label(composite_10, SWT.NONE);
+		lblSpecificationPostcondition.setBounds(10, 58, 252, 15);
+		lblSpecificationPostcondition.setText("Specification Pre-condition");
+		
+		specPre = new Text(composite_10, SWT.BORDER);
+		specPre.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specPre.setBounds(10, 79, 297, 21);
+		
+		Label label_8 = new Label(composite_10, SWT.NONE);
+		label_8.setText("Specification Post-condition");
+		label_8.setBounds(10, 106, 252, 15);
+		
+		specPost = new Text(composite_10, SWT.BORDER);
+		specPost.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specPost.setBounds(10, 127, 297, 21);
+		
+		Label label_9 = new Label(composite_10, SWT.SEPARATOR | SWT.HORIZONTAL);
+		label_9.setBounds(10, 154, 252, 2);
+		
+		specList = new List(composite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
+		specList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		specList.setBounds(352, 66, 393, 305);
+		
+		Button btnAddSpec = new Button(composite, SWT.NONE);
+		btnAddSpec.setText("Add");
+		btnAddSpec.setBounds(244, 377, 91, 25);
+		
+		Button btnDeleteSpec = new Button(composite, SWT.NONE);
+		btnDeleteSpec.setText("Delete");
+		btnDeleteSpec.setBounds(557, 377, 91, 25);
+		
+		Button btnEditSpec = new Button(composite, SWT.NONE);
+		btnEditSpec.setText("Edit");
+		btnEditSpec.setBounds(654, 377, 91, 25);
+		
+		TabItem tabDom = new TabItem(mainTab, SWT.NONE);
+		tabDom.setText("Domain Constraints");
+		
+		Composite composite_6 = new Composite(mainTab, SWT.NONE);
+		tabDom.setControl(composite_6);
+		
+		Label lblEnterDomainConstraints = new Label(composite_6, SWT.CENTER);
+		lblEnterDomainConstraints.setText("NOT YET POSSIBLE");
+		lblEnterDomainConstraints.setBounds(10, 10, 735, 25);
+		
+		domInput = new Text(composite_6, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		domInput.setText("p(0);");
+		domInput.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		domInput.setBounds(10, 64, 327, 305);
+		
+		domList = new List(composite_6, SWT.BORDER | SWT.MULTI);
+		domList.setFont(SWTResourceManager.getFont("Courier New", 9, SWT.NORMAL));
+		domList.setBounds(353, 64, 392, 305);
+		
+		Button btnAddDom = new Button(composite_6, SWT.NONE);
+		btnAddDom.setText("Add");
+		btnAddDom.setBounds(244, 377, 91, 25);
+		
+		Button btnDelDom = new Button(composite_6, SWT.NONE);
+		btnDelDom.setText("Delete");
+		btnDelDom.setBounds(557, 377, 91, 25);
+		
+		Button btnEditDom = new Button(composite_6, SWT.NONE);
+		btnEditDom.setText("Edit");
+		btnEditDom.setBounds(654, 377, 91, 25);
+		
+		TabItem tabPersistence = new TabItem(mainTab, SWT.NONE);
+		tabPersistence.setText("Persistence Formulas");
+		
+		Composite composite_5 = new Composite(mainTab, SWT.NONE);
+		composite_5.setEnabled(false);
+		tabPersistence.setControl(composite_5);
+		
+		Label lblNotYetPossible_1 = new Label(composite_5, SWT.CENTER);
+		lblNotYetPossible_1.setText("NOT YET POSSIBLE");
+		lblNotYetPossible_1.setBounds(10, 10, 735, 25);
+		
+		Menu menu = new Menu(shlTalToProlog, SWT.BAR);
+		shlTalToProlog.setMenuBar(menu);
+		
+		MenuItem mntmFile = new MenuItem(menu, SWT.CASCADE);
+		mntmFile.setText("File");
+		
+		Menu menu_1 = new Menu(mntmFile);
+		mntmFile.setMenu(menu_1);
+		
+		MenuItem menuNew = new MenuItem(menu_1, SWT.NONE);
+		menuNew.setText("New");
+		
+		MenuItem menuOpen = new MenuItem(menu_1, SWT.NONE);
+		menuOpen.setText("Open File...");
+		
+		new MenuItem(menu_1, SWT.SEPARATOR);
+		
+		menuSaveAs = new MenuItem(menu_1, SWT.NONE);
+		menuSaveAs.setText("Save as...");
+		
+		new MenuItem(menu_1, SWT.SEPARATOR);
+		
+		MenuItem menuExit = new MenuItem(menu_1, SWT.NONE);
+		menuExit.setText("Exit");
+		
+		new MenuItem(menu_1, SWT.SEPARATOR);
+		
+		MenuItem mntmExecute = new MenuItem(menu, SWT.CASCADE);
+		mntmExecute.setText("Execute");
+		
+		Menu menu_3 = new Menu(mntmExecute);
+		mntmExecute.setMenu(menu_3);
+		
+		MenuItem mntmCompileNarrative = new MenuItem(menu_3, SWT.NONE);
+		mntmCompileNarrative.setEnabled(false);
+		mntmCompileNarrative.setText("Compile Narrative");
+		
+		MenuItem mntmGeneratePrologFile = new MenuItem(menu_3, SWT.NONE);
+		mntmGeneratePrologFile.setEnabled(false);
+		mntmGeneratePrologFile.setText("Generate Prolog File");
+		
+		new MenuItem(menu_3, SWT.SEPARATOR);
+		
+		MenuItem mntmReset_1 = new MenuItem(menu_3, SWT.NONE);
+		mntmReset_1.setText("Reset");
+		
+		menuConstraints = new MenuItem(menu, SWT.NONE);
+		menuConstraints.setText("Constraints");
+		
+		MenuItem mntmAbout_1 = new MenuItem(menu, SWT.CASCADE);
+		mntmAbout_1.setText("Help");
+		
+		Menu menu_2 = new Menu(mntmAbout_1);
+		mntmAbout_1.setMenu(menu_2);
+		
+		MenuItem mntmHelp = new MenuItem(menu_2, SWT.NONE);
+		mntmHelp.setEnabled(false);
+		mntmHelp.setText("Readme");
+		
+		new MenuItem(menu_2, SWT.SEPARATOR);
+		
+		MenuItem mntmAboutTalTo = new MenuItem(menu_2, SWT.NONE);
+		mntmAboutTalTo.setEnabled(false);
+		mntmAboutTalTo.setText("About TAL to Prolog");
+		
+		Label label_7 = new Label(shlTalToProlog, SWT.SEPARATOR);
+		FormData fd_label_7 = new FormData();
+		fd_label_7.bottom = new FormAttachment(100, -632);
+		fd_label_7.top = new FormAttachment(0, 10);
+		fd_label_7.right = new FormAttachment(100, -867);
+		fd_label_7.left = new FormAttachment(0, 24);
+		label_7.setLayoutData(fd_label_7);
+		
+		iconCompileNarrative = new Label(shlTalToProlog, SWT.NONE);
+		fd_tabFolder.top = new FormAttachment(iconCompileNarrative, 15);
+		iconCompileNarrative.setToolTipText("Compile Narrative (Reify and Circumscribe)");
+		iconCompileNarrative.setImage(SWTResourceManager.getImage(Main.class, "/resources/compile.png"));
+		FormData fd_iconCompileNarrative = new FormData();
+		fd_iconCompileNarrative.left = new FormAttachment(0, 24);
+		fd_iconCompileNarrative.top = new FormAttachment(label_7, 0, SWT.TOP);
+		iconCompileNarrative.setLayoutData(fd_iconCompileNarrative);
+		
+		iconConvertToProlog = new Label(shlTalToProlog, SWT.NONE);
+		iconConvertToProlog.setToolTipText("Generate Prolog file");
+		iconConvertToProlog.setImage(SWTResourceManager.getImage(Main.class, "/resources/prolog.gif"));
+		FormData fd_iconConvertToProlog = new FormData();
+		fd_iconConvertToProlog.top = new FormAttachment(label_7, 0, SWT.TOP);
+		fd_iconConvertToProlog.left = new FormAttachment(iconCompileNarrative, 6);
+		iconConvertToProlog.setLayoutData(fd_iconConvertToProlog);
+		
+		iconReset = new Label(shlTalToProlog, SWT.NONE);
+		iconReset.setToolTipText("Reset Narrative");
+		iconReset.setImage(SWTResourceManager.getImage(Main.class, "/resources/reset.gif"));
+		FormData fd_iconReset = new FormData();
+		fd_iconReset.top = new FormAttachment(label_7, 0, SWT.TOP);
+		fd_iconReset.left = new FormAttachment(iconConvertToProlog, 6);
+		iconReset.setLayoutData(fd_iconReset);
+		
+		iconHelp = new Label(shlTalToProlog, SWT.NONE);
+		iconHelp.setToolTipText("Help");
+		iconHelp.setImage(SWTResourceManager.getImage(Main.class, "/resources/help.png"));
+		FormData fd_iconHelp = new FormData();
+		fd_iconHelp.top = new FormAttachment(label_7, 0, SWT.TOP);
+		iconHelp.setLayoutData(fd_iconHelp);
+		
+		iconAbout = new Label(shlTalToProlog, SWT.NONE);
+		iconAbout.setToolTipText("About TAL to Prolog");
+		fd_iconHelp.left = new FormAttachment(0, 189);
+		iconAbout.setImage(SWTResourceManager.getImage(Main.class, "/resources/about.png"));
+		FormData fd_iconAbout = new FormData();
+		fd_iconAbout.top = new FormAttachment(label_7, 0, SWT.TOP);
+		fd_iconAbout.right = new FormAttachment(iconHelp, -6);
+		iconAbout.setLayoutData(fd_iconAbout);
+		
+		Cursor handCursor = new Cursor(display, SWT.CURSOR_HAND);
+		
+		iconCompileNarrative.setCursor(handCursor);
+		iconConvertToProlog.setCursor(handCursor);
+		iconReset.setCursor(handCursor);
+		iconHelp.setCursor(handCursor);
+		iconAbout.setCursor(handCursor);
+		
+		Composite composite_4 = new Composite(shlTalToProlog, SWT.NONE);
+		fd_tabFolder.bottom = new FormAttachment(composite_4, -6);
+		FormData fd_composite_4 = new FormData();
+		fd_composite_4.bottom = new FormAttachment(100, -10);
+		fd_composite_4.top = new FormAttachment(0, 501);
+		
+		TabItem tabDep = new TabItem(mainTab, SWT.NONE);
+		tabDep.setText("Dependency Constraints");
+		
+		Composite composite_11 = new Composite(mainTab, SWT.NONE);
+		tabDep.setControl(composite_11);
+		
+		Label lblNotYetPossible = new Label(composite_11, SWT.CENTER);
+		lblNotYetPossible.setText("NOT YET POSSIBLE");
+		lblNotYetPossible.setBounds(10, 10, 735, 25);
+		fd_composite_4.left = new FormAttachment(0, 24);
+		fd_composite_4.right = new FormAttachment(100, -25);
+		composite_4.setLayoutData(fd_composite_4);
+		
+		Group grpLogs = new Group(composite_4, SWT.NONE);
+		grpLogs.setText("Log");
+		grpLogs.setBounds(0, 0, 763, 159);
+		
+		log = new Text(grpLogs, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+		log.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
+		log.setEditable(false);
+		log.setBounds(10, 24, 743, 125);
+		
+		iconCompileNarrative.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseEnter(MouseEvent e) { 
+				swapImage(iconCompileNarrative, "compile_hover.png");
+			}
+			
+			public void mouseExit(MouseEvent e) {swapImage(iconCompileNarrative, "compile.png"); }
+		});
+		
+		iconConvertToProlog.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseEnter(MouseEvent e) { swapImage(iconConvertToProlog, "prolog_hover.gif"); }
+			
+			public void mouseExit(MouseEvent e) { swapImage(iconConvertToProlog, "prolog.gif"); }
+		});
+		
+		iconReset.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseEnter(MouseEvent e) { swapImage(iconReset, "reset_hover.gif"); }
+			
+			public void mouseExit(MouseEvent e) { swapImage(iconReset, "reset.gif"); }
+		});
+		
+		iconHelp.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseEnter(MouseEvent e) { swapImage(iconHelp, "help_hover.png"); }
+			
+			public void mouseExit(MouseEvent e) { swapImage(iconHelp, "help.png"); }
+		});
+		
+		iconAbout.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
+			public void mouseEnter(MouseEvent e) { swapImage(iconAbout, "about_hover.png"); }
+			
+			public void mouseExit(MouseEvent e) { swapImage(iconAbout, "about.png"); }
+		});
+		
+		/***********************************
+		 * EVENT LISTENERS                 *
+		 ***********************************
+		 */
+		
+		/**
+		 * ======================== MENU BAR
+		 */
+
+		registerCallback(menuConstraints, this, "openConstraintsWindow");		
+		menuSaveAs.addSelectionListener(new Save());
+		menuOpen.addSelectionListener(new Open());
+		menuExit.addSelectionListener(new Exit());
+		menuNew.addSelectionListener(new Reset());
+		
+		/**
+		 * ======================== ALPHABET
+		 */
+		
+		// Fluents
+		fluent.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.CR) addToAlphabet(fluent, fluentsList, TALConstants.FLUENT);  } 
+		});
+		
+		// Actions
+		action.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.CR) addToAlphabet(action, actionsList, TALConstants.ACTION); }
+		});
+		
+		// Constants
+		constant.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.CR) addToAlphabet(constant, constantsList, TALConstants.CONSTANT); }
+		});
+		
+		btnAddFluent.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { addToAlphabet(fluent, fluentsList, TALConstants.FLUENT); }
+		});
+		
+		btnAddAction.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { addToAlphabet(action, actionsList, TALConstants.ACTION); }
+		});
+		
+		btnAddConstant.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { addToAlphabet(constant, constantsList, TALConstants.CONSTANT);  }
+		});
+		
+		btnDeleteFluent.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { removeFromAlphabet(fluentsList); }
+		});
+		
+		btnDeleteAction.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { removeFromAlphabet(actionsList); }
+		});
+		
+		btnDeleteConstant.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) { removeFromAlphabet(constantsList); }
+		});
+		
+		fluentsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.DEL) removeFromAlphabet(fluentsList);  } 
+		});
+		
+		actionsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.DEL) removeFromAlphabet(actionsList);  } 
+		});
+		
+		constantsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) { if (e.keyCode == SWT.DEL) removeFromAlphabet(constantsList);  } 
+		});
+		
+
+		/**
+		 * ======================== OBSERVATIONS
+		 */
+		
+		btnAddObs.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryAddToNarrative(obsInput, TALConstants.OBSERVATION, obsList);
+			}
+		});
+		
+		btnDeleteObs.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				
+				removeFromList(obsList);
+			}
+		});
+		
+		btnEditObs.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryEditElement(obsList, obsInput);
+			}
+		});
+		
+		/**
+		 * ======================== ACTION OCCURRENCES
+		 */
+
+		btnAddOcc.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				boolean manual = (occSubTab.getSelectionIndex() == 0);
+				
+				// manual mode
+				if (manual) tryAddToNarrative(occInput, TALConstants.ACTION_OCC, occList);
+				
+				// automatic mode
+				else
+				{
+					String formula = "occurs(" + occBeginTime.getText() + ", " + occEndTime.getText() + ", " + occAction.getText() + ")";
+					
+					if (narrative.validate(formula, TALConstants.ACTION_OCC)) 
+					{						
+						if (tryAddToNarrative(formula, TALConstants.ACTION_OCC))
+								tryAddToList(formula, occList);
+						
+						occBeginTime.setText("");
+						occEndTime.setText("");
+						occAction.setText("");
+					}
+				}
+			}
+		});
+		
+		btnDeleteOcc.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				
+				removeFromList(occList);
+			}
+		});
+		
+		btnEditOcc.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryEditElement(occList, occInput);
+				occSubTab.setSelection(0);
+			}
+		});
+		
+		
+		/**
+		 * ======================== ACTION SPECIFICATION FORMULAS
+		 */
+		
+		btnAddSpec.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				boolean manual = (specSubTab.getSelectionIndex() == 0);
+				
+				// manual mode
+				if (manual) tryAddToNarrative(specInput, TALConstants.ACTION_SPEC, specList);
+				
+				// automatic mode
+				else
+				{
+					String formula = specCurFormula.getText();
+					if (narrative.validate(formula, TALConstants.ACTION_SPEC)) 
+					{						
+						if (tryAddToNarrative(formula, TALConstants.ACTION_SPEC))
+								tryAddToList(formula, specList);
+						
+						specAction.setText("");
+						specPre.setText("");
+						specPost.setText("");
+						specCurFormula.setText("");
+					}
+				}
+			}
+		});
+	
+		btnDeleteSpec.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				
+				removeFromList(specList);
+			}
+		});
+		
+		btnEditSpec.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryEditElement(specList, specInput);
+				specSubTab.setSelection(0);
+			}
+		});
+		
+		specAction.addKeyListener(new KeyAdapter() { @Override public void keyReleased(KeyEvent e) { setCurrentSpecFormula();  }  });
+		specPre.addKeyListener(new KeyAdapter() { @Override public void keyReleased(KeyEvent e) { setCurrentSpecFormula();  }  });
+		specPost.addKeyListener(new KeyAdapter() { @Override public void keyReleased(KeyEvent e) { setCurrentSpecFormula();  }  });
+		
+		/**
+		 * ======================== DOMAIN CONSTRAINTS
+		 */
+		/*
+		btnAddDom.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryAddToNarrative(domInput, TALConstants.DOMAIN_CONSTR, domList);
+			}
+		});
+		
+		btnDeleteObs.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				
+				removeFromList(domList);
+			}
+		});
+		
+		btnEditObs.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) 
+			{
+				tryEditElement(domList, domInput, );
+			}
+		});*/
+	}
+	
+	/**
+	 * ======================== HELPER METHODS
+	 */
+	
+	public void updateConstraints()
+	{
+		boolean depConstr = !constraints.isEnabled(ConstraintConstants.NO_DEPENDENCY_CONSTRAINTS);
+		boolean persistence = !constraints.isEnabled(ConstraintConstants.ALL_FLUENTS_PERSISTENT);
+		boolean domConstr = !constraints.isEnabled(ConstraintConstants.NO_DOMAIN_CONSTRAINTS);
+				
+		mainTab.getTabList()[TAB_DEPENDENCY].setEnabled(depConstr);
+		mainTab.getTabList()[TAB_PERSISTENCE].setEnabled(persistence);
+		mainTab.getTabList()[TAB_DOMAIN_CONST].setEnabled(domConstr);
+	}
+	
+	protected void registerCallback(final MenuItem mi, 
+            final Object handler, 
+            final String handlerName) {
+		
+		mi.addListener(SWT.Arm, new Listener() {
+			public void handleEvent(Event event) {
+				try {
+					Method m = handler.getClass().getMethod(handlerName, null);
+					m.invoke(handler, null);
+				} catch (Exception ex) { ex.printStackTrace(); }
+			}
+		});
+	}
+	
+	public void openConstraintsWindow() {
+		new ConstraintsWindow(shlTalToProlog, narrative);
+	}
+	
+	public void openSaveAsDialog() {
+		FileDialog fd = new FileDialog(shlTalToProlog, SWT.OPEN);
+		fd.setText("Save narrative as...");
+		fd.setFilterPath("C:/");
+		String[] filterExt = { "*.tal", "*.*" };
+		fd.setFilterExtensions(filterExt);
+		String selected = fd.open();
+		IO.print(selected);
+	}
+	
+	private void addToAlphabet(Text symbol, List list, int type)
+	{		
+		if (narrative.addToAlphabet(symbol.getText(), type))
+			tryAddToList(symbol, list); 
+	}
+	
+	private void removeFromAlphabet(List list)
+	{
+		int index = list.getSelectionIndex();
+		
+		if (index > -1)
+		{
+			String str = list.getItem(index);
+			narrative.removeFromAlphabet(str);
+			list.remove(index);
+		}
+	}
+	
+	private void removeFromList(List list)
+	{
+		int indices[] = list.getSelectionIndices();
+		
+		if (indices[0] > -1)
+		{
+			for (int index : indices)
+				list.remove(index);
+		}
+	}
+	
+	
+	private void swapImage(Label label, String image) {
+		label.setImage(SWTResourceManager.getImage(Main.class, "/resources/" + image));
+	}
+	
+	private void tryAddToList(Text text, List list) 
+	{
+		tryAddToList(text.getText(), list);
+		text.setText("");
+	}
+	
+	private void tryAddToList(String text, List list) 
+	{
+		if ((text.length() > 0)) 
+		{
+			if (!listContains(list, text))
+				list.add(text);
+		}
+	}
+	
+	private boolean listContains(List list, String item)
+	{
+		for (String it : list.getItems())
+			if (item.equals(it)) return true;
+		
+		return false;
+	}
+	
+	private void tryEditElement(List list, Text text) {
+		int indices[] = list.getSelectionIndices();
+		
+		if (indices != null) 
+		{			
+			for (int i=0; i<indices.length; i++) {
+				String formula = list.getSelection()[i];
+				text.setText(text.getText() + (text.getText().trim().equals("")?"":"\n") + formula + ";");
+				narrative.removeFromNarrative(formula);
+			}
+			
+			text.setFocus();
+			text.setSelection(text.getText().length());
+			
+			list.remove(list.getSelectionIndices());
+		}	
+	}
+	
+	private void tryAddToNarrative(Text text, int narrativeType, List list)
+	{
+		if (narrative.validate(text.getText(), narrativeType)) 
+		{
+			VisitorManager v = new VisitorManager();
+			
+			for (String line : text.getText().split(";"))
+			{
+				// make the formulas look a little nice
+				VisitResult ret = v.visitTree(line, VisitorConstants.SIMPLIFY);
+				
+				// add it to the GUI if it doesn't exists already in a part of the narrative
+				if (tryAddToNarrative(ret.image, narrativeType))
+					tryAddToList(ret.image, list);
+			}
+		
+			text.setText("");
+		}
+	}
+	
+	
+	private boolean tryAddToNarrative(String formula, int narrativeType)
+	{
+		Integer ret = narrative.addToNarrative(formula, narrativeType);
+		if (ret != null)
+		{
+			IO.guiErr("The formula " + formula + " already exists in " + 
+						(ret == narrativeType ? 
+								"this narrative" : 
+							"another part of the narrative (" + TALConstants.getNarrativeDescription(ret) + ")") + "\nFormula discarded...");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private void setCurrentSpecFormula()
+	{
+		String action = specAction.getText();
+		String pre    = specPre.getText();
+		String post	  = specPost.getText();
+		
+		String conseq = (pre!=""&&post!="" ? "(" + pre + " -> " + post + ")" : pre + post);
+		String formula = (action=="" ? "" : "occurs(T1,T2," + action + ")") + (conseq.length()>0&&action!=""? " -> ":"") + conseq;
+		
+		specCurFormula.setText(formula);
+	}
+	
+	class Open implements SelectionListener {
+		public void widgetSelected(SelectionEvent event) {
+			FileDialog fd = new FileDialog(shlTalToProlog, SWT.OPEN);
+			fd.setText("Open TAL Narrative");
+			fd.setFilterPath(".");
+			String[] filterExt = { "*.tal", "*.*" };
+			fd.setFilterExtensions(filterExt);
+			
+			String ret = FileIO.open(narrative, fd.open());
+			if (ret != null) 
+				IO.alert(shlTalToProlog, "Open File", ret);
+			else
+				reloadNarrative();
+		}
+
+		public void widgetDefaultSelected(SelectionEvent event) {}
+	}
+	
+	class Exit extends SelectionAdapter { public void widgetSelected(SelectionEvent e) { exitWindow(); } }
+
+	class Reset implements SelectionListener {
+		public void widgetSelected(SelectionEvent event) {
+			MessageBox mb = new MessageBox(shlTalToProlog, SWT.ICON_WARNING
+        			| SWT.YES | SWT.NO);
+
+        	mb.setMessage("Creating a new narrative will remove the current one, are you sure?");
+
+        	// If they click Yes, we're done and we drop out. If
+        	// they click No, we redisplay the File Dialog
+        	if (mb.open() == SWT.YES) {
+        		narrative.reset();
+        		clearLists();
+        	}
+		}
+
+		@Override
+		public void widgetDefaultSelected(SelectionEvent arg0) {}
+	}
+	
+	class Save implements SelectionListener {
+		public void widgetSelected(SelectionEvent event) {
+			FileDialog fd = new FileDialog(shlTalToProlog, SWT.SAVE);
+			fd.setText("Save TAL Narrative");
+			fd.setFilterPath(".");
+			String[] filterExt = { "*.tal", "*.*" };
+			fd.setFilterExtensions(filterExt);
+			
+			String filename = saveFile(fd);
+			
+			if (filename != null) {
+				String ret = null;//FileIO.save(narrative, filename);
+				if (ret != null) 
+					IO.alert(shlTalToProlog, "Save File", ret);
+			}
+		}
+
+		public void widgetDefaultSelected(SelectionEvent event) {}
+	}
+	
+	public String saveFile(FileDialog fd) {
+		String fileName = null;
+
+		// The user has finished when one of the following happens:
+		// 1) The user dismisses the dialog by pressing Cancel
+		// 2) The selected file name does not exist
+		// 3) The user agrees to overwrite existing file
+		boolean done = false;
+
+		while (!done) {
+			// Open the File Dialog
+			fileName = fd.open();
+			if (fileName == null) {
+				// User has cancelled, so quit and return
+				done = true;
+			} else {
+				// User has selected a file; see if it already exists
+		        File file = new File(fileName);
+		        if (file.exists()) {
+		        	// The file already exists; asks for confirmation
+		        	MessageBox mb = new MessageBox(fd.getParent(), SWT.ICON_WARNING
+		        			| SWT.YES | SWT.NO);
+
+		        	// We really should read this string from a resource bundle
+		        	mb.setMessage(fileName + " already exists. Do you want to replace it?");
+
+		        	// If they click Yes, we're done and we drop out. If
+		        	// they click No, we redisplay the File Dialog
+		        	done = mb.open() == SWT.YES;
+		        } else
+		        	// File does not exist, so drop out
+		        	done = true;
+			}
+		}
+		return fileName;
+	}
+	
+	public int exitWindow() {
+		MessageBox messageBox = new MessageBox(shlTalToProlog, SWT.ICON_QUESTION
+				| SWT.YES | SWT.NO);
+		messageBox.setMessage("Do you really want to exit?");
+		messageBox.setText("Exiting Application");
+        int response = messageBox.open();
+        if (response == SWT.YES)
+        	System.exit(0);
+        return response;
+	}
+	
+	private void reloadNarrative() 
+	{		
+		// clear all lists first
+		clearLists();
+		
+		// alphabet
+		HashMap<String, Integer> alphMap = narrative.getAlphabet().getMap();
+		
+		for (String formula : alphMap.keySet()) {
+			switch (alphMap.get(formula))
+			{
+			
+			case TALConstants.FLUENT: tryAddToList(formula, fluentsList); continue;
+			case TALConstants.ACTION: tryAddToList(formula, actionsList); continue;
+			case TALConstants.CONSTANT: tryAddToList(formula, constantsList); continue;
+			}
+		}
+		
+		// narrative types
+		HashMap <String, Integer> narMap = narrative.getNarrative().getMap();
+		
+		for (String formula : narMap.keySet()) {
+			switch (narMap.get(formula))
+			{
+			case TALConstants.OBSERVATION: tryAddToList(formula, obsList); continue;
+			case TALConstants.ACTION_OCC: tryAddToList(formula, occList); continue;
+			case TALConstants.ACTION_SPEC: tryAddToList(formula, specList); continue;
+			//case TALConstants.DEP_CONSTR: tryAddToList(formula, depList); continue;
+			//case TALConstants.PERSISTENCE: tryAddToList(formula, obsList); continue;
+			//case TALConstants.DOMAIN_CONSTR: tryAddToList(formula, obsList); continue;
+			}
+		}
+	}
+	
+	private void clearLists() {
+		fluentsList.removeAll();
+		actionsList.removeAll();
+		constantsList.removeAll();
+		obsList.removeAll();
+		occList.removeAll();
+		specList.removeAll();
+	}
+}

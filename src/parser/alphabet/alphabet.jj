@@ -1,0 +1,139 @@
+options {
+STATIC = false ;
+}
+
+PARSER_BEGIN(AlphabetParser) 
+package parser.alphabet;
+import tal.TALConstants;
+import java.util.HashMap;
+	
+/**
+ * Alphabet parser. The alphabet has the following syntax:
+ * 
+ * fluents {
+ *     fluent1;
+ *     fluent2;
+ *     ...
+ * }
+ * 
+ * actions {
+ *     action1;
+ *     action2;
+ *     ...
+ * }
+ * 
+ * constants {
+ *     constant1;
+ *     constant2;
+ *     ...
+ * }
+ * 
+ * Comments can be entered both using // comments or /* comments */
+
+/**
+ * @author Marc van Zee (marcvanzee@gmail.com) - Linköping University
+ *
+ */
+public class AlphabetParser {} 
+PARSER_END(AlphabetParser)
+
+
+/////////////////////
+//   the lexicon   //
+/////////////////////
+
+// skip whitespaces and newlines
+SKIP : { " " | "\r" | "\t" | "\n" }
+
+// skip // these comments
+SKIP :
+{
+< "//" (~["\n"])* "\n" >
+}
+
+// skip /* these comments */ as well
+SKIP :
+{
+< "/*" > : IN_COMMENT
+}
+<IN_COMMENT> SKIP :
+{
+< "*/" > : DEFAULT
+| < ~[] >
+}
+
+TOKEN : /* lexical tokens */
+{   <LACC : "{">  | <RACC : "}"> | <COMMA : ","> | <SEMICOLON : ";">  }
+
+TOKEN: /* sections */
+{   <FLUENTS: "fluents"> | <ACTIONS: "actions"> | <CONSTANTS: "constants"> }
+
+TOKEN : /* only allowed identifiers */
+{ <IDENT: ["a"-"z"] ( ["a"-"z"] | ["A"-"Z"] | ["0"-"9"] | "_" | "-" )* > }
+
+
+////////////////////
+//   the parser   //
+////////////////////
+
+HashMap<String, Integer> alphabet() : 
+{
+	HashMap<String, Integer> alphabet = new HashMap<String, Integer>();
+	HashMap<String, Integer> temp;
+} 
+{ 	
+(
+	temp = fluents() { alphabet.putAll(temp); }
+)* <EOF>
+
+{ return alphabet; }
+}
+
+HashMap<String, Integer> fluents() : 
+{
+	HashMap<String, Integer> fluents = new HashMap<String, Integer>();
+	Token s;
+}
+{
+	<FLUENTS> <LACC> 
+		(s = <IDENT> 	{ fluents.put(s.image, TALConstants.FLUENT); } (<COMMA> | <SEMICOLON>)  )*
+	<RACC>
+{ return fluents; }
+}
+
+HashMap<String, Integer> actions() : 
+{
+	HashMap<String, Integer> actions = new HashMap<String, Integer>();
+	Token s;
+}
+{
+	<ACTIONS> <LACC> 
+		(s = <IDENT> 	{ actions.put(s.image, TALConstants.ACTION); } (<COMMA> | <SEMICOLON>)  )*
+	<RACC>
+{ return actions; }
+}
+HashMap<String, Integer> constants() : 
+{
+	HashMap<String, Integer> constants = new HashMap<String, Integer>();
+	Token s;
+}
+{
+	<CONSTANTS> <LACC> 
+		(s = <IDENT> 	{ constants.put(s.image, TALConstants.CONSTANT); } (<COMMA> | <SEMICOLON>)  )*
+	<RACC>
+{ return constants; }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
