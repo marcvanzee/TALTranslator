@@ -6,7 +6,7 @@ I have developed the ```TALTranslator``` application that supplements the theore
 
 As the name might suggest, the application automatically translates TAL narratives into a form that is amendable for theorem proving. The following figure shows the workflow that is intended for the application: 
 
-![The intended workflow of TALTranslator](img1.png)
+![The intended workflow of TALTranslator](http://www.marcvanzee.nl/tmp/taltranslatorimg/img1.png)
 
 Some entity in the world (the user, or perhaps another application) specifies a narrative in ```TALTranslator```. This narrative is then translated into a form that is recognized by an off-theshelf theorem prover of choice, such as a logic programming implementation or an SMT solver. This compiled narrative can then be sent to the theorem prover which can interact with the outside world.
 
