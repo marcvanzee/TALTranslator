@@ -21,11 +21,11 @@ In this manual I will discuss how to use the application. This means I will expl
 The TALTranslator application can be started by running the ```Main.gui``` class.
 When started, the following GUI is displayed:
 
-![The start screen of TALTranslator](images/img2.png)
+![The start screen of TALTranslator](http://www.marcvanzee.nl/tmp/taltranslatorimg/img2.png)
 
 The user is able to create a new project (```CTRL+N``` or via the menubar: ```File > New Project```), or open an existing project (```CTRL+O``` or ```File > Open Project```). When starting a new project, the following dialog shows up, giving the user the possibility to choose the type of project:
 
-![Creating a new project that translates a TAL narrative to a Prolog file](images/img3.png)
+![Creating a new project that translates a TAL narrative to a Prolog file](http://www.marcvanzee.nl/tmp/taltranslatorimg/img3.png)
 
 Currently, only the ```TALToProlog``` project has been implemented, but when translations to other formalisms such as SMT have been implemented, the user is able to specify the corresponding project here.
 
@@ -34,7 +34,7 @@ Currently, only the ```TALToProlog``` project has been implemented, but when tra
 ```TALTranslator``` comes with several examples, which can be found in the directory narratives. To open such an example, press ```CTRL+O``` or navigate to the menubar: ```File > Open File...```. Project specifications have the extension
 ```.talproj```. The following figure shows part of the project ```Robot Specification```:
 
-![Part of the Robot Specification example scenario](images/img4.png)
+![Part of the Robot Specification example scenario](http://www.marcvanzee.nl/tmp/taltranslatorimg/img4.png)
 
 Projects can be saved simply by pressing ```CTRL+S``` or navigating to ```File > Save```.
 
@@ -52,7 +52,7 @@ We distinguish four different predicate sorts that can be used in the narrative 
 
 Each predicate used in the narrative will always be in one of these four categories. Therefore we require the user to enter all the predicates that will occur in the narrative in the first dialog screen of the GUI:
 
-![Specifying the alphabet of a narrative](images/img5.png)
+![Specifying the alphabet of a narrative](http://www.marcvanzee.nl/tmp/taltranslatorimg/img5.png)
 
 Moreover, since the predicates ```Holds``` and ```Occludes``` are used in the reified narrative, they are also not allowed to be used here.
 
@@ -110,8 +110,8 @@ In the case of ```TALToProlog```, this is implemented as follows:
 
 The first step of this compiling can be applied by going to the menubar item: ```Run > Reify and Circumscribe```. Once this has been execute successfully, a second subproject will appear called ```Compiled narrative```. This subproject contains the item ```Complete compiled narrative```, which contains the entire theory. The following figure shows part of the compiled narrative for the example application ```Robot Specification```:
 
-![Part of the compiled narrative for the Robot Specification application](images/img6.png)
+![Part of the compiled narrative for the Robot Specification application](http://www.marcvanzee.nl/tmp/taltranslatorimg/img6.png)
 
 The second step is performed by going to ```Run > Generate Prolog File```. I have included a ```Prolog solver``` into the application as well, which can be used to insert the resulting theory in. The ```Prolog solver``` is called ```tuProlog``` and can be started by going to ```Run > run tuProlog```. The following figure shows part of the Prolog file of the Robot Specification application in tuProlog:
 
-![: tuProlog containing the Prolog file for the narrative Robot Specification application](images/img7.png)
+![: tuProlog containing the Prolog file for the narrative Robot Specification application](http://www.marcvanzee.nl/tmp/taltranslatorimg/img7.png)
